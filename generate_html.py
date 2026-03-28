@@ -60,7 +60,8 @@ for s in stock_list:
         prev = df.iloc[-2]
         chg = latest['close'] - prev['close']
         chgPct = (chg / prev['close']) * 100
-  
+        amplitude = ((latest['high'] - latest['low']) / latest['close']) * 100
+        
         k = round(latest['K'], 1)
         d = round(latest['D'], 1)
 

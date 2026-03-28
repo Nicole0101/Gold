@@ -1,25 +1,31 @@
 import requests
 import pandas as pd
 
+API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMy0yOCAyMjo0Mzo0NiIsInVzZXJfaWQiOiJuaWNvbGUwMTAxIiwiZW1haWwiOiJuaWNvbGVfbGluQG1zbi5jb20iLCJpcCI6IjM2LjIyNC4yNTMuMjUifQ.bjWqLj9jmNvMA75Jx6H88FhDWh0D1rHVOkVsndXgboA"
+
 def get_stock_data(stock_id):
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{stock_id}.TW"
 
-    headers = {"User-Agent": "Mozilla/5.0"}
-    res = requests.get(url, headers=headers)
+    url = "https://api.finmindtrade.com/api/v4/data"
 
+    params = {
+        "dataset": "TaiwanStockPrice",
+        "data_id": str(stock_id),
+        "start_date": "2023-01-01",
+        "token": API_TOKEN
+    }
+
+    res = requests.get(url, params=params)
     data = res.json()
 
-    result = data.get('chart', {}).get('result')
+    if "data" not in data or len(data["data"]) == 0:
+        return pd.DataFrame()
 
-    if not result:
-        return pd.DataFrame()   # ⭐ 回傳空，避免爆炸
+    df = pd.DataFrame(data["data"])
 
-    quote = result[0]['indicators']['quote'][0]
-
-    df = pd.DataFrame({
-        "close": quote.get('close'),
-        "high": quote.get('high'),
-        "low": quote.get('low')
+    df = df.rename(columns={
+        "close": "close",
+        "max": "high",
+        "min": "low"
     })
 
-    return df.dropna()
+    return df[["close", "high", "low"]].dropna()

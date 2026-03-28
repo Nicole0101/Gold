@@ -17,6 +17,7 @@ def load_stock_list():
     return df.to_dict(orient="records")
 stock_list = load_stock_list()
 results = []
+print("股票清單:", stock_list)
 
 # ===== 主迴圈 =====
 for s in stock_list:

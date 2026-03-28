@@ -1,1 +1,4 @@
-Print(requirements.txt)
+pandas
+pandas-ta
+requests
+jinja2

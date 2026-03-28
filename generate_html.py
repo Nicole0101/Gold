@@ -1,36 +1,52 @@
-from jinja2 import Template
-from data import load_stock_list, get_stock_data
+import pandas as pd
+from data import get_stock_data
 from indicator import add_indicators
 from ai_analysis import analyze
+from jinja2 import Template
+
+# ===== 讀取你的持股 CSV =====
+def load_stock_list():
+    df = pd.read_csv("stocks.csv")
+
+    # ⭐ 中文欄位轉英文（超重要）
+    df = df.rename(columns={
+        "股票代號": "stock_id",
+        "股票名稱": "name"
+    })
+
+    return df.to_dict(orient="records")
+
 
 stock_list = load_stock_list()
 
 results = []
 
+# ===== 主迴圈 =====
 for s in stock_list:
     code = str(s["stock_id"])
     name = s["name"]
 
-    df = get_stock_data(code)
-    df = add_indicators(df)
+    print(f"處理中: {code} {name}")
 
-    results.append({
-        "name": name,
-        "code": code,
-        "price": round(df['close'].iloc[-1], 2),
-        "analysis": analyze(name)
-    })
-for s in stocks:
-    df = get_stock_data(s)
-    df = add_indicators(df)
+    try:
+        df = get_stock_data(code)
+        df = add_indicators(df)
 
-    results.append({
-        "code": s,
-        "price": df['close'].iloc[-1],
-        "analysis": analyze(s)
-    })
+        latest = df.iloc[-1]
 
-# 載入模板
+        results.append({
+            "name": name,
+            "code": code,
+            "price": round(latest['close'], 2),
+            "k": round(latest['K'], 1),
+            "d": round(latest['D'], 1),
+            "analysis": analyze(name)
+        })
+
+    except Exception as e:
+        print(f"錯誤: {code} - {e}")
+
+# ===== 產生 HTML =====
 with open("template.html", "r", encoding="utf-8") as f:
     template = Template(f.read())
 
@@ -38,3 +54,5 @@ html = template.render(stocks=results)
 
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html)
+
+print("✅ 報告生成完成")

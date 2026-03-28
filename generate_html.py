@@ -73,20 +73,22 @@ for s in stock_list:
             latest['BB_lower']
         )
 
-        results.append({
+        results.append({          
             "name": name,
             "code": code,
-            "sector": "electronic",  # 先固定（之後可升級）
             "price": round(latest['close'], 2),
-            "chg": 0,
-            "chgPct": 0,
+            
+            "chg": round(chg, 2),
+            "chgPct": round(chgPct, 2),
+            "amp": round(amplitude, 2),
+            
             "kPat": "整理",
             "k": k,
             "d": d,
             "kdDiv": "無背離",
             "bb": bb,
             "bbW": "正常",
-            "sig": signal
+            "sig": signal        
         })
 
     except Exception as e:

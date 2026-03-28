@@ -10,8 +10,8 @@ def load_stock_list():
 
     # ⭐ 中文欄位轉英文（超重要）
     df = df.rename(columns={
-        "股票代號": "stock_id",
-        "股票名稱": "name"
+        "Ticker": "stock_id",
+        "Name": "name"
     })
 
     return df.to_dict(orient="records")

@@ -1,4 +1,3 @@
 pandas
-pandas-ta
 jinja2
 requests

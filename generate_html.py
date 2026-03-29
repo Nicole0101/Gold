@@ -146,7 +146,6 @@ weak_names = ", ".join([s["name"] for s in sorted_stocks[-5:]])
 
 
 # ===== GPT =====
-# ===== GPT =====
 stock_summary = "\n".join([
     f"{s['name']} {s['chgPct']}%"
     for s in results[:10]

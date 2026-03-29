@@ -5,6 +5,59 @@ from indicator import add_indicators
 from jinja2 import Template
 from datetime import datetime, timedelta
 import os
+import requests
+
+OPENAI_API_KEY = "你的GPT_API_KEY"
+
+def ask_gpt(prompt):
+    url = "https://api.openai.com/v1/chat/completions"
+
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "model": "gpt-4o-mini",
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    }
+
+    res = requests.post(url, headers=headers, json=data)
+    return res.json()["choices"][0]["message"]["content"]
+
+stock_summary = "\n".join([
+    f"{s['name']} 漲跌{round(s['chgPct'],2)}% 訊號:{s['sig']}"
+    for s in results[:15]
+])
+
+prompt = f"""
+請產出台股專業分析，分成5段：
+
+1. 台股總覽（指數、漲跌）
+2. 盤勢分析
+3. 強勢族群
+4. 弱勢族群
+5. 個股建議（列出買進與賣出）
+
+資料如下：
+大盤漲跌：{round(chg_pct,2)}%
+
+個股：
+{stock_summary}
+
+請用繁體中文，像分析師報告。
+"""
+gpt_report = ask_gpt(prompt)
+sections = gpt_report.split("\n\n")
+
+gpt_1 = sections[0] if len(sections)>0 else ""
+gpt_2 = sections[1] if len(sections)>1 else ""
+gpt_3 = sections[2] if len(sections)>2 else ""
+gpt_4 = sections[3] if len(sections)>3 else ""
+gpt_5 = sections[4] if len(sections)>4 else ""
+
 
 API_TOKEN ="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMy0yOCAyMjo0Mzo0NiIsInVzZXJfaWQiOiJuaWNvbGUwMTAxIiwiZW1haWwiOiJuaWNvbGVfbGluQG1zbi5jb20iLCJpcCI6IjM2LjIyNC4yNTMuMjUifQ.bjWqLj9jmNvMA75Jx6H88FhDWh0D1rHVOkVsndXgboA"   # ⭐ 直接寫這裡
 print("FINMIND_TOKEN:", API_TOKEN)    

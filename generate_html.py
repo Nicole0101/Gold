@@ -8,18 +8,18 @@ from datetime import datetime, timedelta
 API_TOKEN ="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMy0yOCAyMjo0Mzo0NiIsInVzZXJfaWQiOiJuaWNvbGUwMTAxIiwiZW1haWwiOiJuaWNvbGVfbGluQG1zbi5jb20iLCJpcCI6IjM2LjIyNC4yNTMuMjUifQ.bjWqLj9jmNvMA75Jx6H88FhDWh0D1rHVOkVsndXgboA"   # ⭐ 直接寫這裡
 print("FINMIND_TOKEN:", API_TOKEN)    
 def get_TWSE_data():
-    if API_TOKEN is None:
-        return pd.DataFrame()
-
     url = "https://api.finmindtrade.com/api/v4/data"
+
     params = {
         "dataset": "TaiwanStockPrice",
-        "data_id": "TWSE",   # ⭐ 修正
+        "data_id": "TAIEX",   # 確保是這個
         "start_date": "2024-01-01",
         "token": API_TOKEN
     }
+
     res = requests.get(url, params=params)
     data = res.json()
+
     return pd.DataFrame(data.get("data", []))
     
 

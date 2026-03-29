@@ -1,4 +1,5 @@
 import pandas as pd
+import requests 
 from data import get_stock_data
 from indicator import add_indicators
 from jinja2 import Template
@@ -140,19 +141,23 @@ for f in files[3:]:
 
 # LINE 推播
 def send_line_message(msg):
-    url = "https://api.line.me/v2/bot/message/push"
-    headers = {
-        "Authorization": "Bearer YOUR_CHANNEL_ACCESS_TOKEN",
-        "Content-Type": "application/json"
-    }
+    try:
+        url = "https://api.line.me/v2/bot/message/push"
+        headers = {
+            "Authorization": f"Bearer {TOKEN}",
+            "Content-Type": "application/json"
+        }
 
-    data = {
-        "to": "YOUR_USER_ID",
-        "messages": [
-            {"type": "text", "text": msg}
-        ]
-    }
-    requests.post(url, headers=headers, json=data)
-# 發送通知
+        data = {
+            "to": USER_ID,
+            "messages": [
+                {"type": "text", "text": msg}
+            ]
+        }
+
+        res = requests.post(url, headers=headers, json=data)
+        print("LINE status:", res.status_code)
+    except Exception as e:
+        print("LINE 發送失敗:", e)# 發送通知
 send_line_message(f"📊 台股報告已更新：{filename}")
 send_line_message(f"📊 最新報告\nhttps://Nicole0101.github.io/StockHolding-report/")

@@ -23,13 +23,49 @@ def ask_gpt_json(prompt):
         "messages": [
             {"role": "system", "content": "請用JSON格式回覆"},
             {"role": "user", "content": prompt}
-        ],
-        "response_format": {"type": "json_object"}
+        ]
     }
 
-    res = requests.post(url, headers=headers, json=data)
-    return res.json()["choices"][0]["message"]["content"]
+    try:
+        res = requests.post(url, headers=headers, json=data)
+        result = res.json()
 
+        # 🔥 Debug（很重要）
+        print("GPT raw:", result)
+
+        if "choices" not in result:
+            print("❌ GPT回傳錯誤:", result)
+            return "{}"
+
+        return result["choices"][0]["message"]["content"]
+
+    except Exception as e:
+        print("❌ GPT exception:", e)
+        return "{}"
+
+
+try:
+    gpt_data = json.loads(gpt_raw)
+except:
+    print("GPT解析失敗:", gpt_raw)
+    gpt_data = {}
+
+#======fallback======
+gpt_summary = gpt_data.get("summary") or "市場震盪整理"
+gpt_trend = gpt_data.get("trend") or market_trend
+gpt_strong = gpt_data.get("strong_sector") or top_names
+gpt_weak = gpt_data.get("weak_sector") or weak_names
+gpt_buy = ", ".join(gpt_data.get("buy_list", [])) or top_names
+gpt_sell = ", ".join(gpt_data.get("sell_list", [])) or weak_names
+gpt_risk = gpt_data.get("risk") or "注意市場波動"
+
+#======自動重試=======
+import time
+for i in range(3):
+    gpt_raw = ask_gpt_json(prompt)
+    if gpt_raw != "{}":
+        break
+    time.sleep(2)
 
 # ===== FinMind =====
 API_TOKEN = "你的FinMindToken"

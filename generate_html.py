@@ -114,8 +114,6 @@ for s in stock_list:
 print("結果數量:",len(results))
 
 # ===== 產HTML =====
-
-
 # ===== 讀大盤 =====  
 TWSE = get_TWSE_data()
 if API_TOKEN is None:

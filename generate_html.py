@@ -66,7 +66,7 @@ for s in stock_list:
     try:
         code = str(s["stock_id"])
         name = s["name"]
-        print(f"處理中: {code}")
+        #    print(f"處理中: {code}")
 
         df = get_stock_data(code)
         df = add_indicators(df)

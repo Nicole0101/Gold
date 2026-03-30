@@ -264,4 +264,5 @@ msg = f"""
 📌 賣出：{gpt_sell}
 
 👉 https://nicole0101.github.io/StockHolding-report/
+"""
 send_line(msg)

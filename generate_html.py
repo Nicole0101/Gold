@@ -136,6 +136,9 @@ for s in stock_list:
 
 print("結果數量:", len(results))
 
+# ===== 波動策略統計（放這裡🔥）=====
+rebound_list = [s["name"] for s in results if s.get("strategy") == "反彈🔥"]
+selloff_list = [s["name"] for s in results if s.get("strategy") == "出貨⚠"]
 
 # ===== 大盤 =====
 TWSE = get_TWSE_data()

@@ -9,7 +9,7 @@ import json
 
 # ===== API =====
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
+print("OPENAI_API_KEY: ",OPENAI_API_KEY)
 def ask_gpt_json(prompt):
     url = "https://api.openai.com/v1/chat/completions"
 

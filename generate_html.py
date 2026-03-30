@@ -9,7 +9,6 @@ import json
 
 # ===== API =====
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-print("OPENAI_API_KEY: ",OPENAI_API_KEY)
 def ask_gpt_json(prompt):
     url = "https://api.openai.com/v1/chat/completions"
 
@@ -130,10 +129,8 @@ for s in stock_list:
             "bb": get_bb_position(latest["close"], latest["BB_upper"], latest["BB_lower"]),
             "sig": get_signal(latest["K"], latest["D"])
         })
-
     except Exception as e:
         print("錯誤:", e)
-
 print("結果數量:", len(results))
 
 # ===== 波動策略統計（放這裡🔥）=====
@@ -238,7 +235,6 @@ html = template.render(
     weak_stocks=weak_names
 )
 
-
 # ===== 存檔 =====
 now = (datetime.utcnow() + timedelta(hours=8)).strftime("%m%d%H%M")
 filename = f"持股_{now}.html"
@@ -256,14 +252,14 @@ print("輸出:", filename)
 from line_push import send_line
 
 msg = f"""
-📊 台股盤後分析
+📊台股盤後分析
 
 {gpt_summary}
 
-📈 盤勢：{gpt_trend}
+📈盤勢：{gpt_trend}
 
-🔥 強勢族群：{gpt_strong}
-⚠ 弱勢族群：{gpt_weak}
+🔥強勢族群：{gpt_strong}
+⚠弱勢族群：{gpt_weak}
 
 📌 買進：{gpt_buy}
 📌 賣出：{gpt_sell}

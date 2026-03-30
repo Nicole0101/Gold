@@ -3,6 +3,7 @@ import requests
 
 TOKEN = os.getenv("LINE_TOKEN")
 USER_ID = os.getenv("LINE_USER_ID")
+print("TOKEN:", TOKEN)
 
 def send_line(msg):
     try:

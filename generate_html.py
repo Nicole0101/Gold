@@ -238,15 +238,15 @@ html = template.render(
 # ===== 存檔 =====
 now = (datetime.utcnow() + timedelta(hours=8)).strftime("%m%d%H%M")
 filename = f"持股_{now}.html"
-
 with open(filename, "w", encoding="utf-8") as f:
     f.write(html)
-
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html)
-
 print("輸出:", filename)
 
+git add .
+git commit -m "update report"
+git push
 
 # ===== LINE =====
 from line_push import send_line
@@ -257,14 +257,11 @@ msg = f"""
 {gpt_summary}
 
 📈盤勢：{gpt_trend}
-
 🔥強勢族群：{gpt_strong}
 ⚠弱勢族群：{gpt_weak}
 
 📌 買進：{gpt_buy}
 📌 賣出：{gpt_sell}
 
-👉 https://Nicole0101.github.io/StockHolding-report/
-"""
-
+👉 https://nicole0101.github.io/StockHolding-report/
 send_line(msg)

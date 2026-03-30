@@ -252,9 +252,9 @@ git push
 from line_push import send_line
 
 msg = f"""
-📊台股盤後分析
+📊 台股盤後分析
 
-{gpt_summary}
+{gpt_summary or '（無）'}
 
 📈盤勢：{gpt_trend}
 🔥強勢族群：{gpt_strong}
@@ -264,5 +264,6 @@ msg = f"""
 📌 賣出：{gpt_sell}
 
 👉 https://nicole0101.github.io/StockHolding-report/
-"""
+""".strip()
+
 send_line(msg)

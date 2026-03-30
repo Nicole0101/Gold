@@ -103,6 +103,7 @@ for s in stock_list:
 
         chg = latest["close"] - prev["close"]
         chgPct = (chg / prev["close"]) * 100
+        amplitude = ((latest['high'] - latest['low']) / prev['close']) * 100
 
         results.append({
             "name": s["name"],

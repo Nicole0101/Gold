@@ -60,7 +60,7 @@ def get_TWSE_data():
 
 # ===== 讀CSV =====
 def load_stock_list():
-    df = pd.read_csv("stocks.csv", sep="\t", encoding="utf-8-sig")
+    df = pd.read_csv("NextStocks.csv", sep="\t", encoding="utf-8-sig")
     df = df.rename(columns={"Ticker": "stock_id", "Name": "name"})
     return df.to_dict(orient="records")
 
@@ -237,7 +237,7 @@ html = template.render(
 
 # ===== 存檔 =====
 now = (datetime.utcnow() + timedelta(hours=8)).strftime("%m%d%H%M")
-filename = f"持股_{now}.html"
+filename = f"關注標的股_{now}.html"
 with open(filename, "w", encoding="utf-8") as f:
     f.write(html)
 with open("index.html", "w", encoding="utf-8") as f:
@@ -259,7 +259,7 @@ msg = f"""
 📌 買進：{gpt_buy}
 📌 賣出：{gpt_sell}
 
-👉 https://nicole0101.github.io/StockHolding-report/
+👉 https://nicole0101.github.io/StockNext-report/
 """.strip()
 
 send_line(msg)

@@ -1,18 +1,17 @@
-name: Gen CSV
+name: Gen Gold CSV
 
 on:
   workflow_dispatch:
   push:
-    paths:
-      - "Goldcsv/**"
-      - "Gencsv.py"
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -20,22 +19,23 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install pandas
+      - name: Install dependencies
         run: pip install pandas
 
-      - name: Run script
-        run: python Gencsv.py
+      - name: Run build_gold.py
+        run: python build_gold.py
 
-      - name: Check files
+      - name: Check generated files
         run: |
           pwd
           ls -la
-          find . -maxdepth 3 -type f | sort
+          ls -la Allcsv || true
+          test -f Gold.csv && echo "Gold.csv exists" || echo "Gold.csv missing"
 
-      - name: Commit Gold.csv
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Gold.csv Goldcsv/Gold.csv
-          git diff --cached --quiet || git commit -m "Auto update Gold.csv"
+          git add Gold.csv
+          git diff --cached --quiet || git commit -m "Update Gold.csv"
           git push

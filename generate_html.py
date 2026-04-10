@@ -248,7 +248,7 @@ print("輸出:", filename)
 from line_push import send_line
 
 msg = f"""
-📊 台股盤後分析
+📊 (標的)台股盤後分析
 
 {gpt_summary or '（無）'}
 
@@ -258,6 +258,7 @@ msg = f"""
 
 📌 買進：{gpt_buy}
 📌 賣出：{gpt_sell}
+
 
 👉 https://nicole0101.github.io/StockNext-report/
 """.strip()

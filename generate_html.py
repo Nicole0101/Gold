@@ -260,7 +260,7 @@ msg = f"""
 📌 賣出：{gpt_sell}
 
 
-👉 https://nicole0101.github.io/StockNext-report/
+👉 https://nicole0101.github.io/Gold/
 """.strip()
 
 send_line(msg)

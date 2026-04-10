@@ -1,4 +1,4 @@
-name: Gen Gold CSV
+name: Gen CSV
 
 on:
   workflow_dispatch:

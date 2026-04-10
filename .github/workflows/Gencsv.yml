@@ -11,8 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -22,20 +24,28 @@ jobs:
       - name: Install dependencies
         run: pip install pandas
 
-      - name: Run build_gold.py
+      - name: Run Gencsv.py
         run: python Gencsv.py
 
-      - name: Check generated files
+      - name: Verify generated files
         run: |
           pwd
           ls -la
           ls -la Allcsv || true
-          test -f Gold.csv && echo "Gold.csv exists" || echo "Gold.csv missing"
+          test -f Gold.csv && echo "Gold.csv exists" || (echo "Gold.csv missing" && exit 1)
 
-      - name: Commit and push
+      - name: Commit and push Gold.csv
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add Gold.csv
-          git diff --cached --quiet || git commit -m "Update Gold.csv"
-          git push
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "Update Gold.csv"
+          git pull --rebase origin main
+          git push origin main

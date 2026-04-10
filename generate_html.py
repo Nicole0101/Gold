@@ -237,7 +237,7 @@ html = template.render(
 
 # ===== 存檔 =====
 now = (datetime.utcnow() + timedelta(hours=8)).strftime("%m%d%H%M")
-filename = f"關注標的股_{now}.html"
+filename = f"標的股_{now}.html"
 with open(filename, "w", encoding="utf-8") as f:
     f.write(html)
 with open("index.html", "w", encoding="utf-8") as f:

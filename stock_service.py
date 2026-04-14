@@ -42,12 +42,13 @@ def process_stock(s):
 
         yield_raw = get_dividend_yield(s['stock_id'], latest['close'])
         dividend = None
-        yield_value = None
+        yield_value = None      
         if isinstance(yield_raw, dict):
             dividend = yield_raw.get('dividend')
             yield_value = yield_raw.get('yield')
         elif isinstance(yield_raw, (int, float)):
             yield_value = float(yield_raw)
+            
         per_pbr_stats = get_per_pbr_90d_stats(s['stock_id'], days=90)
         ma_stats = get_MABias(df)
 
@@ -193,6 +194,8 @@ def process_stock(s):
             'ma18_break': bool(ma18_break),
             'kd_buy': bool(kd_buy),
             'bb_pct': float(bb_pct) if bb_pct is not None else None,
+            'bb_upper': float(round(bb_upper, 2)) if bb_upper is not None and pd.notna(bb_upper) else None,
+            'bb_lower': float(round(bb_lower, 2)) if bb_lower is not None and pd.notna(bb_lower) else None,
 
             'volume': int(round(volume, 0)) if pd.notna(volume) else None,
             'prev_volume': int(round(prev_volume, 0)) if pd.notna(prev_volume) else None,

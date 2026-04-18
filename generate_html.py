@@ -3,13 +3,11 @@ import config
 from datetime import datetime, timedelta
 from jinja2 import Template
 import os
-from data import get_full_stock_analysis  # 確保 data.py 已準備好
+from main import get_full_stock_analysis  # 確保 data.py 已準備好
 
 # ========================
 # 1️⃣ 工具函數：資料結構化整理
 # ========================
-
-
 def format_output(results):
     results = [r for r in results if r and r.get("price")]
 
@@ -20,10 +18,8 @@ def format_output(results):
         elif isinstance(r.get("yield"), (int, float)):
             y = r["yield"]
 
-        e = r.get("eps_est") if isinstance(
-            r.get("eps_est"), (int, float)) else 0
-        p = r.get("per_est") if isinstance(
-            r.get("per_est"), (int, float)) else 0
+        e = r.get("eps_est") if isinstance(r.get("eps_est"), (int, float)) else 0
+        p = r.get("per_est") if isinstance(r.get("per_est"), (int, float)) else 0
 
         # 若外部沒給 score，補 0 避免排序報錯
         if "score" not in r:

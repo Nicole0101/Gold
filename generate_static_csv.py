@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import argparse
 import os
 import time
@@ -50,6 +50,7 @@ ORDERED_COLS = BASE_COLS + SOURCE_META_COLS
 
 TERMINAL_STATUSES = {"ok", "partial_ok"}
 SOURCE_TERMINAL_STATUSES = {"ok", "no_data"}
+DEFAULT_REFRESH_DAYS = 7
 
 
 def now_utc_str():
@@ -82,6 +83,81 @@ def is_finmind_limit_error(exc: Exception) -> bool:
     return any(keyword in msg for keyword in limit_keywords)
 
 
+def compact_text(text: str, max_len: int = 120) -> str:
+    text = " ".join(str(text or "").replace("\n", " ").split())
+    if len(text) <= max_len:
+        return text
+    return text[: max_len - 3] + "..."
+
+
+def compact_missing_summary(missing: list[str], max_items: int = 8) -> str:
+    """Return a short static_reason summary for missing legacy data columns."""
+    missing_set = set(missing or [])
+    parts = []
+
+    for group, cols in GROUPS.items():
+        group_missing = [c for c in cols if c in missing_set]
+        if not group_missing:
+            continue
+        if len(group_missing) == len(cols):
+            parts.append(group)
+        else:
+            parts.extend(group_missing)
+
+    if not parts:
+        parts = list(missing or [])
+
+    shown = parts[:max_items]
+    suffix = f",+{len(parts) - max_items}" if len(parts) > max_items else ""
+    return ",".join(shown) + suffix
+
+
+def compact_group_reason(group: str, status: str, reason: str = "") -> str:
+    status = str(status or "").strip().lower()
+    reason = compact_text(reason, 80)
+
+    if status in {"api_limited", "limited"}:
+        return f"{group}:limited"
+    if status == "error":
+        return f"{group}:error" + (f"({reason})" if reason else "")
+    if status == "incomplete":
+        return f"{group}:incomplete" + (f"({reason})" if reason else "")
+    if status == "pending":
+        return f"{group}:pending"
+    if status == "no_data":
+        return group
+    return f"{group}:{status or 'pending'}"
+
+
+def parse_static_updated_at(value):
+    if is_blank_value(value):
+        return None
+    try:
+        ts = pd.to_datetime(value, errors="coerce", utc=False)
+        if pd.isna(ts):
+            return None
+        if hasattr(ts, "to_pydatetime"):
+            ts = ts.to_pydatetime()
+        if getattr(ts, "tzinfo", None) is not None:
+            ts = ts.replace(tzinfo=None)
+        return ts
+    except Exception:
+        return None
+
+
+def is_stale_ok_row(row: dict, refresh_days: int) -> bool:
+    """Return True when an OK row is older than refresh_days and should be refreshed."""
+    if refresh_days is None or refresh_days <= 0:
+        return False
+    status = str(row.get("static_status", "")).strip().lower()
+    if status != "ok":
+        return False
+    updated_at = parse_static_updated_at(row.get("static_updated_at"))
+    if updated_at is None:
+        return True
+    return datetime.utcnow() - updated_at > timedelta(days=refresh_days)
+
+
 def all_blank(row: dict, cols: list[str]) -> bool:
     return all(is_blank_value(row.get(c)) for c in cols)
 
@@ -105,7 +181,7 @@ def get_finmind_usage():
 
 def set_group_status(row: dict, group: str, status: str, reason: str = ""):
     row[f"{group}_status"] = status
-    row[f"{group}_reason"] = reason or ""
+    row[f"{group}_reason"] = compact_text(reason or "", 160)
 
 
 def empty_static_row(s: dict) -> dict:
@@ -123,21 +199,21 @@ def empty_static_row(s: dict) -> dict:
 def get_revenue_trend(stock_id):
     data = get_revenue_raw(stock_id)
     if not data:
-        return None, "no revenue raw data"
+        return None, "empty"
 
     df = pd.DataFrame(data)
     if "revenue" not in df.columns:
         if "value" in df.columns:
             df["revenue"] = df["value"]
         else:
-            return None, "revenue/value column not found"
+            return None, "missing revenue/value col"
 
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
     df["revenue"] = pd.to_numeric(df["revenue"], errors="coerce")
     df = df.sort_values("date").dropna(subset=["date", "revenue"])
 
     if len(df) < 13:
-        return None, f"only {len(df)} revenue months; need at least 13"
+        return None, f"months<{13}:{len(df)}"
 
     curr = df.iloc[-1]["revenue"]
     prev_m = df.iloc[-2]["revenue"]
@@ -166,31 +242,34 @@ def finalize_static_status(row: dict) -> dict:
         if g_status == "ok":
             missing = [c for c in cols if is_blank_value(row.get(c))]
             if missing:
-                set_group_status(
-                    row, g, "incomplete", "ok status but missing: " + ",".join(missing[:8]))
-                problems.append(f"{g}: missing fields")
+                short_missing = compact_missing_summary(missing)
+                set_group_status(row, g, "incomplete",
+                                 "missing:" + short_missing)
+                problems.append(f"{g}:missing")
         elif g_status == "no_data":
-            no_data_groups.append(f"{g}({g_reason})" if g_reason else g)
+            no_data_groups.append(compact_group_reason(g, "no_data", g_reason))
         elif g_status in {"api_limited", "limited"}:
-            problems.append(f"{g}: api_limited")
+            problems.append(compact_group_reason(g, "api_limited", g_reason))
         elif g_status == "error":
-            problems.append(
-                f"{g}: error" + (f" - {g_reason}" if g_reason else ""))
+            problems.append(compact_group_reason(g, "error", g_reason))
+        elif g_status == "incomplete":
+            problems.append(compact_group_reason(g, "incomplete", g_reason))
         else:
-            problems.append(f"{g}: {g_status or 'pending'}")
+            problems.append(compact_group_reason(
+                g, g_status or "pending", g_reason))
 
     if problems:
-        if any("api_limited" in p for p in problems):
+        if any("limited" in p for p in problems):
             row["static_status"] = "api_limited"
         elif any("error" in p for p in problems):
             row["static_status"] = "error"
         else:
             row["static_status"] = "incomplete"
-        row["static_reason"] = "; ".join(problems[:6])
+        row["static_reason"] = compact_text(";".join(problems[:6]), 180)
     elif no_data_groups:
         row["static_status"] = "partial_ok"
-        row["static_reason"] = "source no data: " + \
-            "; ".join(no_data_groups[:6])
+        row["static_reason"] = compact_text(
+            "no_data:" + ",".join(no_data_groups[:6]), 180)
     else:
         row["static_status"] = "ok"
         row["static_reason"] = ""
@@ -217,10 +296,10 @@ def build_static_row(s: dict) -> dict:
         row["per_ttm"] = per_ttm
         if all_blank(row, GROUPS["eps"]):
             set_group_status(row, "eps", "no_data",
-                             "EPS/PER source returned empty")
+                             "empty")
         elif any_blank(row, GROUPS["eps"]):
             set_group_status(row, "eps", "incomplete",
-                             "EPS/PER source returned partial data")
+                             "partial")
         else:
             set_group_status(row, "eps", "ok", "")
     except Exception as e:
@@ -240,12 +319,12 @@ def build_static_row(s: dict) -> dict:
         if rev:
             if any_blank(row, GROUPS["revenue"]):
                 set_group_status(row, "revenue", "incomplete",
-                                 "revenue source returned partial data")
+                                 "partial")
             else:
                 set_group_status(row, "revenue", "ok", "")
         else:
             set_group_status(row, "revenue", "no_data",
-                             reason or "revenue source returned empty")
+                             reason or "empty")
     except Exception as e:
         if is_finmind_limit_error(e):
             set_group_status(row, "revenue", "api_limited", str(e))
@@ -269,10 +348,10 @@ def build_static_row(s: dict) -> dict:
         row["net_margin_yoy_diff"] = yoy_n
         if all_blank(row, GROUPS["profit"]):
             set_group_status(row, "profit", "no_data",
-                             "profit ratio source returned empty")
+                             "empty")
         elif any_blank(row, GROUPS["profit"]):
             set_group_status(row, "profit", "incomplete",
-                             "profit ratio source returned partial data")
+                             "partial")
         else:
             set_group_status(row, "profit", "ok", "")
     except Exception as e:
@@ -292,10 +371,10 @@ def build_static_row(s: dict) -> dict:
         row["pbr_90d_low"] = per_pbr.get("pbr_90d_low")
         if all_blank(row, GROUPS["valuation"]):
             set_group_status(row, "valuation", "no_data",
-                             "PER/PBR source returned empty")
+                             "empty")
         elif any_blank(row, GROUPS["valuation"]):
             set_group_status(row, "valuation", "incomplete",
-                             "PER/PBR source returned partial data")
+                             "partial")
         else:
             set_group_status(row, "valuation", "ok", "")
     except Exception as e:
@@ -336,13 +415,18 @@ def legacy_missing_data_cols(row: dict) -> list[str]:
     return [c for c in DATA_COLS if is_blank_value(row.get(c))]
 
 
-def should_update(row, retry_errors: bool, retry_no_data: bool, force: bool) -> bool:
+def should_update(row, retry_errors: bool, retry_no_data: bool, force: bool, refresh_days: int) -> bool:
     if force or row is None:
         return True
     if isinstance(row, pd.Series):
         row = row.to_dict()
 
     static_status = str(row.get("static_status", "")).strip().lower()
+
+    # Weekly refresh: completed OK rows older than refresh_days are refreshed.
+    # partial_ok/no_data remains terminal by default unless --retry-no-data is used.
+    if is_stale_ok_row(row, refresh_days):
+        return True
 
     # Rows created by v3 have source statuses. Trust them more than field blankness.
     has_source_meta = any(not is_blank_value(
@@ -381,8 +465,8 @@ def repair_legacy_status_only(df: pd.DataFrame) -> pd.DataFrame:
             missing = legacy_missing_data_cols(row)
             if missing:
                 row["static_status"] = "incomplete"
-                row["static_reason"] = "legacy row missing fields; run API check to distinguish no_data: " + \
-                    ",".join(missing[:8])
+                row["static_reason"] = "missing:" + \
+                    compact_missing_summary(missing)
             else:
                 row["static_status"] = "ok"
                 row["static_reason"] = ""
@@ -390,7 +474,7 @@ def repair_legacy_status_only(df: pd.DataFrame) -> pd.DataFrame:
     return normalize_static_df(pd.DataFrame(repaired))
 
 
-def build_incremental(stock_list, output_file, max_rows, min_remain, retry_errors, retry_no_data, force, sleep_sec, repair_only, check_every):
+def build_incremental(stock_list, output_file, max_rows, min_remain, retry_errors, retry_no_data, force, sleep_sec, repair_only, check_every, refresh_days):
     existing = read_existing_static(output_file)
     existing = repair_legacy_status_only(existing)
     existing_by_id = {
@@ -414,12 +498,15 @@ def build_incremental(stock_list, output_file, max_rows, min_remain, retry_error
     for s in stock_list:
         sid = str(s["stock_id"]).strip()
         current = rows_by_id.get(sid)
-        if should_update(current, retry_errors=retry_errors, retry_no_data=retry_no_data, force=force):
+        if should_update(current, retry_errors=retry_errors, retry_no_data=retry_no_data, force=force, refresh_days=refresh_days):
             candidates.append(s)
 
     print(f"Existing rows: {len(existing_by_id)}", flush=True)
     print(f"Total source stocks: {len(stock_list)}", flush=True)
+    stale_ok_count = sum(is_stale_ok_row(rows_by_id.get(
+        str(s["stock_id"]).strip(), {}), refresh_days) for s in stock_list)
     print(f"Need update this run: {len(candidates)}", flush=True)
+    print(f"Stale OK rows queued for refresh: {stale_ok_count}", flush=True)
 
     processed = 0
     stop_reason = "completed"
@@ -435,8 +522,11 @@ def build_incremental(stock_list, output_file, max_rows, min_remain, retry_error
             check_every and processed % check_every == 0)
         if should_check_usage:
             try:
-                _, _, remain = get_finmind_usage()
-                if remain <= min_remain:
+                _, limit, remain = get_finmind_usage()
+                if limit <= 0:
+                    print(
+                        "FinMind usage unknown/unreliable; continue until explicit upper limit error", flush=True)
+                elif remain <= min_remain:
                     stop_reason = f"FinMind remain <= min_remain: {remain} <= {min_remain}"
                     break
             except Exception as e:
@@ -503,6 +593,8 @@ def main():
                         default=0.2, help="Sleep between stocks.")
     parser.add_argument("--check-every", type=int, default=10,
                         help="Check FinMind usage before first stock and every N processed stocks. Use 1 for every stock.")
+    parser.add_argument("--refresh-days", type=int, default=DEFAULT_REFRESH_DAYS,
+                        help="Refresh rows whose static_status is ok and static_updated_at is older than N days. Use 0 to disable.")
     args = parser.parse_args()
 
     try:
@@ -522,6 +614,7 @@ def main():
         sleep_sec=args.sleep_sec,
         repair_only=args.repair_only,
         check_every=max(args.check_every, 1),
+        refresh_days=args.refresh_days,
     )
 
 

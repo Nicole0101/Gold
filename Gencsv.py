@@ -3,7 +3,7 @@ import pandas as pd
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 allcsv_dir = os.path.join(base_dir, "Allcsv")
-output_csv = os.path.join(base_dir, "stock.csv")
+output_csv = os.path.join(base_dir, "stocks.csv")
 
 all_rows = []
 

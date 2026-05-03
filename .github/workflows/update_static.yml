@@ -63,7 +63,7 @@ jobs:
               --min-remain 50 \
               --check-every 20 \
               --retry-errors \
-              --refresh-days 7
+              --refresh-hours 24
 
       - name: Commit AllStatic.csv
         run: |

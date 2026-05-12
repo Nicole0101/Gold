@@ -86,7 +86,7 @@ def get_stock_data(stock_id):
             'start_date': '2023-01-01',
             'token': API_TOKEN,
         }
-        res = requests.get(API_URL, params=params, timeout=180)
+        res = requests.get(API_URL, params=params, timeout=300)
         data = _safe_response_json(res)
         _print_initial_quota_once(data, res)
 
@@ -146,7 +146,7 @@ def get_revenue_raw(stock_id):
             'token': API_TOKEN,
         }
 
-        res = requests.get(API_URL, params=params, timeout=10)
+        res = requests.get(API_URL, params=params, timeout=300)
         res_data = _safe_response_json(res)
         _print_initial_quota_once(res_data, res)
 
@@ -182,7 +182,7 @@ def get_eps_raw(stock_id):
             'start_date': '2020-01-01',
             'token': API_TOKEN,
         }
-        res = requests.get(API_URL, params=params, timeout=10)
+        res = requests.get(API_URL, params=params, timeout=300)
         data = _safe_response_json(res)
         _print_initial_quota_once(data, res)
 
@@ -204,7 +204,7 @@ def get_dividend_raw(stock_id):
             'start_date': '2020-01-01',
             'token': API_TOKEN,
         }
-        res = requests.get(API_URL, params=params, timeout=10)
+        res = requests.get(API_URL, params=params, timeout=300)
         data = _safe_response_json(res)
         _print_initial_quota_once(data, res)
 
@@ -225,7 +225,7 @@ def get_per_raw(stock_id):
             'start_date': '2023-01-01',
             'token': API_TOKEN,
         }
-        res = requests.get(API_URL, params=params, timeout=10)
+        res = requests.get(API_URL, params=params, timeout=300)
         data = _safe_response_json(res)
         _print_initial_quota_once(data, res)
 
@@ -263,7 +263,7 @@ def get_per_pbr_90d_stats(stock_id, days=90):
             "token": API_TOKEN,
         }
 
-        res = requests.get(API_URL, params=params, timeout=10)
+        res = requests.get(API_URL, params=params, timeout=300)
         res_data = _safe_response_json(res)
         _print_initial_quota_once(res_data, res)
 

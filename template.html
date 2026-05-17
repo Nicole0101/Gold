@@ -232,21 +232,62 @@
     }
 
     .volume-cell {
-      min-width: 112px;
-      line-height: 1.35;
+      min-width: 78px;
+      max-width: 86px;
+      line-height: 1.25;
+    }
+
+    th.volume-col,
+    td.volume-col {
+      width: 86px;
+      min-width: 78px;
+      max-width: 90px;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+
+    .volume-cell .table-lv2,
+    .volume-cell .table-lv3 {
+      font-size: 9px;
+      line-height: 1.15;
     }
 
     .filter-panel {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
       margin: 8px 0 12px;
       padding: 10px;
       border: 1px solid #30363d;
       border-radius: 8px;
       background: #161b22;
       font-size: 13px;
+    }
+
+    .filter-title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      align-items: end;
+    }
+
+    .filter-item {
+      display: grid;
+      grid-template-columns: 1fr 52px 1fr;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .filter-label {
+      grid-column: 1 / -1;
+      color: #8b949e;
+      font-size: 11px;
+      line-height: 1.2;
     }
 
     .filter-panel select,
@@ -258,6 +299,11 @@
       border-radius: 6px;
       padding: 6px 8px;
       font-size: 13px;
+    }
+
+    .filter-panel input {
+      min-width: 0;
+      width: 100%;
     }
 
     .filter-panel button {
@@ -403,26 +449,59 @@
     <p>產生時間：{{ generated_time }}</p>
 
     <div class="filter-panel">
-      <span>篩選</span>
-      <select id="filterField" aria-label="篩選欄位">
-        <option value="price">價格區間</option>
-        <option value="chgPct">漲跌%</option>
-        <option value="eps_Y">EPS</option>
-        <option value="gross_margin">毛利率</option>
-        <option value="k">日KD</option>
-        <option value="bb_pct">日布林%</option>
-        <option value="bias6">日Bbias6</option>
-        <option value="volume">日成交量</option>
-        <option value="volume_ratio">日增量%</option>
-      </select>
-      <select id="filterOp" aria-label="篩選條件">
-        <option value=">">&gt;</option>
-        <option value="<">&lt;</option>
-      </select>
-      <input id="filterValue" type="number" step="any" placeholder="輸入數值">
-      <button type="button" id="applyFilterBtn">套用</button>
-      <button type="button" id="resetFilterBtn">清除</button>
-      <span class="filter-hint" id="filterStatus">顯示全部 {{ stocks|length }} 筆</span>
+      <div class="filter-title-row">
+        <span>多重篩選</span>
+        <button type="button" id="applyFilterBtn">套用</button>
+        <button type="button" id="resetFilterBtn">清除</button>
+        <span class="filter-hint" id="filterStatus">顯示全部 {{ stocks|length }} 筆</span>
+      </div>
+      <div class="filter-grid" id="filterGrid">
+        <div class="filter-item" data-field="price" data-label="價格區間">
+          <div class="filter-label">價格區間</div>
+          <select class="filter-op" aria-label="價格區間條件"><option value=">">&gt;</option><option value="<">&lt;</option></select>
+          <input class="filter-value" type="number" step="any" placeholder="數值">
+        </div>
+        <div class="filter-item" data-field="chgPct" data-label="漲跌%">
+          <div class="filter-label">漲跌%</div>
+          <select class="filter-op" aria-label="漲跌%條件"><option value=">">&gt;</option><option value="<">&lt;</option></select>
+          <input class="filter-value" type="number" step="any" placeholder="%">
+        </div>
+        <div class="filter-item" data-field="eps_Y" data-label="EPS">
+          <div class="filter-label">EPS</div>
+          <select class="filter-op" aria-label="EPS條件"><option value=">">&gt;</option><option value="<">&lt;</option></select>
+          <input class="filter-value" type="number" step="any" placeholder="數值">
+        </div>
+        <div class="filter-item" data-field="gross_margin" data-label="毛利率">
+          <div class="filter-label">毛利率</div>
+          <select class="filter-op" aria-label="毛利率條件"><option value=">">&gt;</option><option value="<">&lt;</option></select>
+          <input class="filter-value" type="number" step="any" placeholder="%">
+        </div>
+        <div class="filter-item" data-field="k" data-label="日KD">
+          <div class="filter-label">日KD</div>
+          <select class="filter-op" aria-label="日KD條件"><option value=">">&gt;</option><option value="<">&lt;</option></select>
+          <input class="filter-value" type="number" step="any" placeholder="K值">
+        </div>
+        <div class="filter-item" data-field="bb_pct" data-label="日布林%">
+          <div class="filter-label">日布林%</div>
+          <select class="filter-op" aria-label="日布林%條件"><option value=">">&gt;</option><option value="<">&lt;</option></select>
+          <input class="filter-value" type="number" step="any" placeholder="%">
+        </div>
+        <div class="filter-item" data-field="bias6" data-label="日Bbias6">
+          <div class="filter-label">日Bbias6</div>
+          <select class="filter-op" aria-label="日Bbias6條件"><option value=">">&gt;</option><option value="<">&lt;</option></select>
+          <input class="filter-value" type="number" step="any" placeholder="%">
+        </div>
+        <div class="filter-item" data-field="volume" data-label="日成交量">
+          <div class="filter-label">日成交量</div>
+          <select class="filter-op" aria-label="日成交量條件"><option value=">">&gt;</option><option value="<">&lt;</option></select>
+          <input class="filter-value" type="number" step="any" placeholder="張">
+        </div>
+        <div class="filter-item" data-field="volume_ratio" data-label="日增量%">
+          <div class="filter-label">日增量%</div>
+          <select class="filter-op" aria-label="日增量%條件"><option value=">">&gt;</option><option value="<">&lt;</option></select>
+          <input class="filter-value" type="number" step="any" placeholder="%">
+        </div>
+      </div>
     </div>
 
     <div class="summary">
@@ -442,7 +521,7 @@
               <th data-key="price">價格<br><small>90天LH</small></th>
               <th data-key="chg">漲跌<br><small>LH</small></th>
               <th data-key="chgPct">漲跌%<br><small>震幅%</small></th>
-              <th class="col-md" data-key="volume">成交量<br><small>昨量 / 增% / 張</small></th>
+              <th class="col-md volume-col" data-key="volume">量<br><small>昨/增/張</small></th>
               <th class="col-lg" data-key="eps_Y">EPS<br><small>TTM</small></th>
               <th class="col-lg" data-key="rev">營收(bn)<br><small>M / Q / Y</small></th>
               <th class="col-lg" data-key="gross_margin">毛利率%<br><small>QoQ / YoY</small></th>
@@ -473,7 +552,7 @@
     const stocks = {{ stocks | tojson }};
     const allStocks = Array.isArray(stocks) ? [...stocks] : [];
     let sortedStocks = [...allStocks];
-    let activeFilter = null;
+    let activeFilters = [];
     let currentSortKey = "";
     let currentSortDirection = "asc";
 
@@ -507,10 +586,10 @@
       const ratioClass = isNil(ratio) ? "" : trendClass(ratio);
       return `
         <div class="metric volume-cell">
-          <div class="table-lv1">${fmt(s.volume)} 張</div>
-          <div class="table-lv2">昨: ${fmt(s.prev_volume)}</div>
-          <div class="table-lv2 ${ratioClass}">${isNil(ratio) ? "-" : `${fmtTrend(ratio)} ${fmt(ratio, "%")}`}</div>
-          <div class="table-lv2">${isNil(s.volume_add) ? "-" : `${fmt(s.volume_add)} 張`}</div>
+          <div class="table-lv1">${fmt(s.volume)}</div>
+          <div class="table-lv2">昨 ${fmt(s.prev_volume)}</div>
+          <div class="table-lv2 ${ratioClass}">${isNil(ratio) ? "-" : `${fmtTrend(ratio)}${fmt(ratio, "%")}`}</div>
+          <div class="table-lv3">${isNil(s.volume_add) ? "-" : `${fmt(s.volume_add)}張`}</div>
         </div>`;
     }
 
@@ -599,7 +678,7 @@
           <div class="table-lv2">${fmt(s.amp, "%")}</div>
         </td>
 
-        <td class="col-md">${renderVolumeMetric(s)}</td>
+        <td class="col-md volume-col">${renderVolumeMetric(s)}</td>
 
         <td class="col-lg">
           <div class="table-lv1">${fmt(s.eps_Y)}</div>
@@ -804,12 +883,14 @@
     function updateFilterStatus(data) {
       const status = document.getElementById("filterStatus");
       if (!status) return;
-      if (!activeFilter) {
+      if (!activeFilters.length) {
         status.innerText = `顯示全部 ${allStocks.length} 筆`;
         return;
       }
-      const fieldLabel = document.getElementById("filterField").selectedOptions[0]?.textContent || activeFilter.field;
-      status.innerText = `${fieldLabel} ${activeFilter.op} ${activeFilter.value}，顯示 ${data.length}/${allStocks.length} 筆`;
+      const desc = activeFilters
+        .map(f => `${f.label} ${f.op} ${f.value}`)
+        .join("、");
+      status.innerText = `${desc}，顯示 ${data.length}/${allStocks.length} 筆`;
     }
 
     function renderAll() {
@@ -890,61 +971,70 @@
       });
     }
 
-    function applyFilter() {
-      const field = document.getElementById("filterField").value;
-      const op = document.getElementById("filterOp").value;
-      const value = Number(document.getElementById("filterValue").value);
+    function collectFilters() {
+      return Array.from(document.querySelectorAll(".filter-item"))
+        .map((item) => {
+          const input = item.querySelector(".filter-value");
+          const raw = input?.value?.trim() ?? "";
+          if (raw === "") return null;
 
-      if (Number.isNaN(value)) {
-        activeFilter = null;
-        sortedStocks = [...allStocks];
-        renderAll();
-        return;
-      }
+          const value = Number(raw);
+          if (Number.isNaN(value)) return null;
 
-      activeFilter = { field, op, value };
-      sortedStocks = allStocks.filter((s) => {
-        const v = filterNumber(s[field]);
-        if (v === null) return false;
-        return op === ">" ? v > value : v < value;
+          return {
+            field: item.dataset.field,
+            label: item.dataset.label || item.dataset.field,
+            op: item.querySelector(".filter-op")?.value || ">",
+            value
+          };
+        })
+        .filter(Boolean);
+    }
+
+    function sortCurrentRows() {
+      if (!currentSortKey) return;
+      const direction = currentSortDirection;
+      const key = currentSortKey;
+      sortedStocks.sort((a, b) => {
+        const aVal = getSortValue(a, key);
+        const bVal = getSortValue(b, key);
+        const bothNumbers = typeof aVal === "number" && typeof bVal === "number";
+        if (bothNumbers) return direction === "asc" ? aVal - bVal : bVal - aVal;
+        const result = String(aVal).localeCompare(String(bVal), "zh-Hant");
+        return direction === "asc" ? result : -result;
       });
+    }
 
-      if (currentSortKey) {
-        const direction = currentSortDirection;
-        const key = currentSortKey;
-        sortedStocks.sort((a, b) => {
-          const aVal = getSortValue(a, key);
-          const bVal = getSortValue(b, key);
-          const bothNumbers = typeof aVal === "number" && typeof bVal === "number";
-          if (bothNumbers) return direction === "asc" ? aVal - bVal : bVal - aVal;
-          const result = String(aVal).localeCompare(String(bVal), "zh-Hant");
-          return direction === "asc" ? result : -result;
-        });
-      }
+    function applyFilter() {
+      activeFilters = collectFilters();
 
+      sortedStocks = activeFilters.length
+        ? allStocks.filter((s) => activeFilters.every((f) => {
+            const v = filterNumber(s[f.field]);
+            if (v === null) return false;
+            return f.op === ">" ? v > f.value : v < f.value;
+          }))
+        : [...allStocks];
+
+      sortCurrentRows();
       renderAll();
     }
 
     function resetFilter() {
-      activeFilter = null;
-      document.getElementById("filterValue").value = "";
+      activeFilters = [];
+      document.querySelectorAll(".filter-value").forEach((input) => { input.value = ""; });
       sortedStocks = [...allStocks];
-      if (currentSortKey) {
-        const oldDirection = currentSortDirection;
-        const oldKey = currentSortKey;
-        currentSortKey = "";
-        currentSortDirection = oldDirection === "asc" ? "desc" : "asc";
-        sortStocks(oldKey);
-      } else {
-        renderAll();
-      }
+      sortCurrentRows();
+      renderAll();
     }
 
     function bindFilters() {
       document.getElementById("applyFilterBtn").addEventListener("click", applyFilter);
       document.getElementById("resetFilterBtn").addEventListener("click", resetFilter);
-      document.getElementById("filterValue").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") applyFilter();
+      document.querySelectorAll(".filter-value").forEach((input) => {
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") applyFilter();
+        });
       });
     }
 

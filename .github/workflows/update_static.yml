@@ -1,4 +1,4 @@
-name: Update Static CSV
+name: UpdateUTC7 Static CSV
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ on:
   schedule:
     # GitHub Actions cron uses UTC.
     # 20:00 UTC = Taiwan time 04:00.
-    - cron: "0 20 * * *"
+    - cron: "11 18 * * *"
 
 permissions:
   contents: write

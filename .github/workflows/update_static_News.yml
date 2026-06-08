@@ -1,9 +1,8 @@
-name: Update AllStatic News
+name: Update5 AllStatic News
 
 on:
   schedule:
-    # Taiwan 15:30 = UTC 07:30
-    - cron: "30 7 * * *"
+    - cron: "30 5 * * *"
   workflow_dispatch:
 
 jobs:
